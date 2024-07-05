@@ -1,0 +1,608 @@
+{
+  "id": "38239da7-3eb7-44c7-bdf6-a18a4d5b75ad",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.admin": {
+      "name": "admin",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "admin_username_unique": {
+          "name": "admin_username_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
+          ]
+        },
+        "admin_email_unique": {
+          "name": "admin_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      }
+    },
+    "public.bimbo": {
+      "name": "bimbo",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cognome": {
+          "name": "cognome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_nascita": {
+          "name": "data_nascita",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "residenza": {
+          "name": "residenza",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "luogo_nascita": {
+          "name": "luogo_nascita",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "note_interne": {
+          "name": "note_interne",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "codice_fiscale": {
+          "name": "codice_fiscale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "iscritto_noi": {
+          "name": "iscritto_noi",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.contatto": {
+      "name": "contatto",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cognome": {
+          "name": "cognome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "telefono": {
+          "name": "telefono",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ruolo": {
+          "name": "ruolo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.dati_medici": {
+      "name": "dati_medici",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "iscrizione_id": {
+          "name": "iscrizione_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "documento_identita": {
+          "name": "documento_identita",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gruppo_sanguineo": {
+          "name": "gruppo_sanguineo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "allergie": {
+          "name": "allergie",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "patologie": {
+          "name": "patologie",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "dati_medici_iscrizione_id_iscrizione_id_fk": {
+          "name": "dati_medici_iscrizione_id_iscrizione_id_fk",
+          "tableFrom": "dati_medici",
+          "tableTo": "iscrizione",
+          "columnsFrom": [
+            "iscrizione_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "dati_medici_documento_identita_unique": {
+          "name": "dati_medici_documento_identita_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "documento_identita"
+          ]
+        }
+      }
+    },
+    "public.email_verification": {
+      "name": "email_verification",
+      "schema": "",
+      "columns": {
+        "token": {
+          "name": "token",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "iscrizione_id": {
+          "name": "iscrizione_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_used": {
+          "name": "is_used",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "email_verification_iscrizione_id_iscrizione_id_fk": {
+          "name": "email_verification_iscrizione_id_iscrizione_id_fk",
+          "tableFrom": "email_verification",
+          "tableTo": "iscrizione",
+          "columnsFrom": [
+            "iscrizione_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.evento": {
+      "name": "evento",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "descrizione": {
+          "name": "descrizione",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_inizio": {
+          "name": "data_inizio",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_fine": {
+          "name": "data_fine",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "luogo": {
+          "name": "luogo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sottodominio": {
+          "name": "sottodominio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "privacy_policy": {
+          "name": "privacy_policy",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "privacy_foto": {
+          "name": "privacy_foto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "organizzatori": {
+          "name": "organizzatori",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "privacy_foto_necessaria": {
+          "name": "privacy_foto_necessaria",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "evento_sottodominio_unique": {
+          "name": "evento_sottodominio_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "sottodominio"
+          ]
+        }
+      }
+    },
+    "public.genitore": {
+      "name": "genitore",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cognome": {
+          "name": "cognome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.iscrizione": {
+      "name": "iscrizione",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "evento_id": {
+          "name": "evento_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bimbo_id": {
+          "name": "bimbo_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mail_riferimento": {
+          "name": "mail_riferimento",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "privacy_policy_accettata": {
+          "name": "privacy_policy_accettata",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "privacy_foto_accettata": {
+          "name": "privacy_foto_accettata",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "timestamp_iscrizione": {
+          "name": "timestamp_iscrizione",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pagamento": {
+          "name": "pagamento",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_completed": {
+          "name": "is_completed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "iscrizione_evento_id_evento_id_fk": {
+          "name": "iscrizione_evento_id_evento_id_fk",
+          "tableFrom": "iscrizione",
+          "tableTo": "evento",
+          "columnsFrom": [
+            "evento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "iscrizione_bimbo_id_bimbo_id_fk": {
+          "name": "iscrizione_bimbo_id_bimbo_id_fk",
+          "tableFrom": "iscrizione",
+          "tableTo": "bimbo",
+          "columnsFrom": [
+            "bimbo_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.iscrizione_contatto": {
+      "name": "iscrizione_contatto",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "iscrizione_id": {
+          "name": "iscrizione_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contatto_id": {
+          "name": "contatto_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "iscrizione_contatto_iscrizione_id_iscrizione_id_fk": {
+          "name": "iscrizione_contatto_iscrizione_id_iscrizione_id_fk",
+          "tableFrom": "iscrizione_contatto",
+          "tableTo": "iscrizione",
+          "columnsFrom": [
+            "iscrizione_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "iscrizione_contatto_contatto_id_contatto_id_fk": {
+          "name": "iscrizione_contatto_contatto_id_contatto_id_fk",
+          "tableFrom": "iscrizione_contatto",
+          "tableTo": "contatto",
+          "columnsFrom": [
+            "contatto_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.iscrizione_genitore": {
+      "name": "iscrizione_genitore",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "iscrizione_id": {
+          "name": "iscrizione_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "genitore_id": {
+          "name": "genitore_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "iscrizione_genitore_iscrizione_id_iscrizione_id_fk": {
+          "name": "iscrizione_genitore_iscrizione_id_iscrizione_id_fk",
+          "tableFrom": "iscrizione_genitore",
+          "tableTo": "iscrizione",
+          "columnsFrom": [
+            "iscrizione_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "iscrizione_genitore_genitore_id_genitore_id_fk": {
+          "name": "iscrizione_genitore_genitore_id_genitore_id_fk",
+          "tableFrom": "iscrizione_genitore",
+          "tableTo": "genitore",
+          "columnsFrom": [
+            "genitore_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

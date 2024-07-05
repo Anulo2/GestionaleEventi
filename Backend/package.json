@@ -1,0 +1,26 @@
+{
+	"name": "iscrizioni-grest-backend",
+	"version": "1",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"dev": "bun run --watch src/index.ts",
+		"studio": "pnpm drizzle-kit studio",
+		"generate": "pnpm drizzle-kit generate"
+	},
+	"dependencies": {
+		"@elysiajs/cors": "^1.0.2",
+		"@elysiajs/eden": "^1.0.14",
+		"@elysiajs/swagger": "^1.0.5",
+		"drizzle-kit": "^0.22.8",
+		"drizzle-orm": "^0.31.2",
+		"elysia": "latest",
+		"postgres": "^3.4.4"
+	},
+	"devDependencies": {
+		"bun-types": "latest"
+	},
+	"main": "./src/index.ts",
+	"peerDependencies": {
+		"typescript": "^5.5.3"
+	}
+}
