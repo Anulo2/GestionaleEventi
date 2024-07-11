@@ -1,5 +1,5 @@
 {
-  "id": "38239da7-3eb7-44c7-bdf6-a18a4d5b75ad",
+  "id": "b09318f6-2eb3-41aa-bb9c-3c598a51b760",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -180,12 +180,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "gruppo_sanguineo": {
-          "name": "gruppo_sanguineo",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "allergie": {
           "name": "allergie",
           "type": "text",
@@ -226,19 +220,25 @@
         }
       }
     },
-    "public.email_verification": {
-      "name": "email_verification",
+    "public.email_iscrizione": {
+      "name": "email_iscrizione",
       "schema": "",
       "columns": {
         "token": {
           "name": "token",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
-        "iscrizione_id": {
-          "name": "iscrizione_id",
+        "evento_id": {
+          "name": "evento_id",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mail": {
+          "name": "mail",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -246,7 +246,8 @@
           "name": "expires_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "now() + interval '1 day'"
         },
         "is_used": {
           "name": "is_used",
@@ -258,12 +259,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "email_verification_iscrizione_id_iscrizione_id_fk": {
-          "name": "email_verification_iscrizione_id_iscrizione_id_fk",
-          "tableFrom": "email_verification",
-          "tableTo": "iscrizione",
+        "email_iscrizione_evento_id_evento_id_fk": {
+          "name": "email_iscrizione_evento_id_evento_id_fk",
+          "tableFrom": "email_iscrizione",
+          "tableTo": "evento",
           "columnsFrom": [
-            "iscrizione_id"
+            "evento_id"
           ],
           "columnsTo": [
             "id"
@@ -272,7 +273,15 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "email_iscrizione_token_evento_id_pk": {
+          "name": "email_iscrizione_token_evento_id_pk",
+          "columns": [
+            "token",
+            "evento_id"
+          ]
+        }
+      },
       "uniqueConstraints": {}
     },
     "public.evento": {
@@ -447,6 +456,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "pagamento_file": {
+          "name": "pagamento_file",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
         "is_completed": {
           "name": "is_completed",
           "type": "boolean",
@@ -485,7 +500,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {
+        "iscrizione_pagamento_file_unique": {
+          "name": "iscrizione_pagamento_file_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "pagamento_file"
+          ]
+        }
+      }
     },
     "public.iscrizione_contatto": {
       "name": "iscrizione_contatto",

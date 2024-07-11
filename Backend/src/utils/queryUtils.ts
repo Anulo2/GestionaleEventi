@@ -1,6 +1,6 @@
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import type { App } from "..";
-import type { iscriviBody } from "../type";
+import type { iscriviBody, iniziaIscrizioneBody } from "../type";
 import {
 	bimbo,
 	iscrizione,
@@ -10,10 +10,69 @@ import {
 	contatto,
 	genitore,
 	evento,
+	emailIscrizione,
+	admin,
+	adminToken,
 } from "../../schema";
-import { eq } from "drizzle-orm";
+import { eq, and, or } from "drizzle-orm";
+import type nodemailer from "nodemailer";
+import { nanoid } from "nanoid";
 
-export async function insertIscrizione(db: PostgresJsDatabase, data: any) {
+interface EventoFound {
+	id: number;
+	nome: string | null;
+	descrizione: string | null;
+	data_inizio: Date | null;
+	data_fine: Date | null;
+	luogo: string | null;
+	sottodominio: string | null;
+	privacy_policy: string | null;
+	privacy_foto: string | null;
+	organizzatori: unknown;
+	privacy_foto_necessaria: boolean;
+}
+
+interface TokenFound {
+	evento_id: number | null;
+	token: string | null;
+	mail: string;
+	expires_at: Date;
+	is_used: boolean;
+}
+
+interface InsertIscrizioneData {
+	bonifico_pagamento?: File | undefined;
+	evento: string;
+	token: string;
+	nome_bimbo: string;
+	cognome_bimbo: string;
+	data_nascita_bimbo: Date;
+	residenza_bimbo: string;
+	luogo_nascita_bimbo: string;
+	codice_fiscale_bimbo: string;
+	iscritto_noi_bimbo: boolean;
+	allergie_bimbo: string;
+	patologie_bimbo: string;
+	genitori: { nome_genitore: string; cognome_genitore: string }[];
+	contatti: {
+		nome_contatto: string;
+		cognome_contatto: string;
+		telefono_contatto: string;
+		ruolo_contatto: string;
+	}[];
+	carta_identita_bimbo: File;
+	privacy_foto: boolean;
+	privacy_policy: boolean;
+	note: string;
+}
+
+export async function insertIscrizione(
+	db: PostgresJsDatabase,
+	data: InsertIscrizioneData,
+	eventoFound: EventoFound,
+	tokenFound: TokenFound,
+	mailer: nodemailer.Transporter,
+) {
 	console.log(data);
 	const insertedBimbo = await db
 		.insert(bimbo)
@@ -39,9 +98,9 @@ export async function insertIscrizione(db: PostgresJsDatabase, data: any) {
 	const insertedIscrizione = await db
 		.insert(iscrizione)
 		.values({
-			evento_id: 1,
+			evento_id: eventoFound.id,
 			bimbo_id: insertedBimbo.id,
-			mail_riferimento: "test@example.com",
+			mail_riferimento: tokenFound.mail,
 			privacy_policy_accettata: data.privacy_policy,
 			privacy_foto_accettata: data.privacy_foto,
 			note: data.note,
@@ -127,9 +186,32 @@ export async function insertIscrizione(db: PostgresJsDatabase, data: any) {
 		`./data/carte_identita/${insertedDatiMedici.documento_identita}.jpg`,
 		data.carta_identita_bimbo,
 	);
+
+	if (!tokenFound.token) {
+		throw new Error("Token not found");
+	}
+
+	// update token to be used
+	await db
+		.update(emailIscrizione)
+		.set({
+			is_used: true,
+		})
+		.where(eq(emailIscrizione.token, tokenFound.token));
+
+	// send mail to the user saying that the iscrizione is completed
+	await mailer.sendMail({
+		from: '"Animatori Torreglia " <animatori@parrocchiatorreglia.it>', // sender address
+		to: tokenFound.mail, // list of receivers
+		subject: `Iscrizione a: ${eventoFound.nome}`, // Subject line
+		text: "La tua iscrizione è stata completata con successo", // plain text body
+	});
 }
 
-export async function getIscrizioni(db: PostgresJsDatabase) {
+export async function getIscrizioni(
+	db: PostgresJsDatabase,
+	eventoFound: EventoFound,
+) {
 	const result = await db
 		.select({
 			iscrizione: iscrizione,
@@ -139,7 +221,7 @@ export async function getIscrizioni(db: PostgresJsDatabase) {
 			datiMedici: datiMedici,
 		})
 		.from(iscrizione)
-		.where(eq(iscrizione.evento_id, 1))
+		.where(eq(iscrizione.evento_id, eventoFound.id))
 		.leftJoin(bimbo, eq(iscrizione.bimbo_id, bimbo.id))
 		.leftJoin(
 			iscrizioneGenitore,
@@ -201,4 +283,157 @@ export async function getIscrizioni(db: PostgresJsDatabase) {
 	const groupedResultArray = Object.values(groupedResult);
 
 	return groupedResultArray;
+}
+
+interface IniziaIscrizioneData {
+	email: string;
+	evento: string;
+}
+
+export async function iniziaIscrizione(
+	db: PostgresJsDatabase,
+	data: IniziaIscrizioneData,
+	mailer: nodemailer.Transporter,
+) {
+	const eventoFound = await db
+		.select()
+		.from(evento)
+		.where(eq(evento.sottodominio, data.evento))
+		.then((res) => res[0]);
+
+	if (!eventoFound) {
+		throw new Error("Evento not found");
+	}
+
+	const eventoId = eventoFound.id;
+
+	if (!eventoId) {
+		throw new Error("Evento not found");
+	}
+
+	const iscrizioneId = await db
+		.select()
+		.from(iscrizione)
+		.where(
+			and(
+				eq(iscrizione.mail_riferimento, data.email),
+				eq(iscrizione.evento_id, eventoId),
+			),
+		)
+		.then((res) => {
+			if (res.length > 0) {
+				return res[0].id;
+			}
+			return null;
+		});
+
+	console.log(iscrizioneId);
+
+	// generate a token
+	const emailIscrizioneOut = await db
+		.insert(emailIscrizione)
+		.values({
+			token: nanoid(),
+			evento_id: eventoId,
+			mail: data.email,
+		})
+		.returning()
+		.then((res) => res[0]);
+
+	if (!emailIscrizioneOut) {
+		throw new Error("Error inserting emailIscrizione");
+	}
+
+	let testo = `Ecco il link per proseguire con l'iscrizione: http://localhost:5173/iscrizione/${data.evento}/${emailIscrizioneOut.token}`;
+
+	if (iscrizioneId) {
+		testo = `ATTENZIONE: Ci risulta che ci sia già un bambino iscritto con questa mail. 
+			Se non hai un secondo bambino da iscrivere, 
+			contatta l'organizzazione per eventuali chiarimenti. 
+			Se hai un secondo bambino da iscrivere, puoi proseguire con l'iscrizione.
+			${testo}`;
+	}
+
+	await mailer.sendMail({
+		from: '"Animatori Torreglia " <animatori@parrocchiatorreglia.it>', // sender address
+		to: data.email, // list of receivers
+		subject: `Iscrizione a: ${data.evento}`, // Subject line
+		text: testo, // plain text body
+	});
+}
+
+export async function getEventoFromSottodominio(
+	db: PostgresJsDatabase,
+	sottodominio: string,
+) {
+	return db
+		.select()
+		.from(evento)
+		.where(eq(evento.sottodominio, sottodominio))
+		.then((res) => {
+			if (res.length > 0) {
+				return res[0];
+			}
+			return null;
+		});
+}
+
+export async function getTokenFromIdAndEventId(
+	db: PostgresJsDatabase,
+	token: string,
+	evento_id: number,
+) {
+	return db
+		.select()
+		.from(emailIscrizione)
+		.where(
+			and(
+				eq(emailIscrizione.token, token),
+				eq(emailIscrizione.evento_id, evento_id),
+			),
+		)
+		.then((res) => {
+			if (res.length > 0) {
+				return res[0];
+			}
+			return null;
+		});
+}
+
+export async function getAllEvents(db: PostgresJsDatabase) {
+	return db.select().from(evento);
+}
+
+interface LogInUserData {
+	username_mail: string;
+	password: string;
+}
+
+export async function logInUser(db: PostgresJsDatabase, body: LogInUserData) {
+	const hashedPsw = await Bun.password.hash(body.password);
+	const user = await db
+		.select()
+		.from(admin)
+		.where(
+			and(
+				or(
+					eq(admin.username, body.username_mail),
+					eq(admin.email, body.username_mail),
+				),
+				eq(admin.password, hashedPsw),
+			),
+		);
+
+	if (user.length === 0) {
+		return null;
+	}
+
+	// insert adminToken
+	const token = nanoid();
+	await db.insert(adminToken).values({
+		admin_id: user[0].id,
+		token: token,
+	});
+
+	return token;
 }

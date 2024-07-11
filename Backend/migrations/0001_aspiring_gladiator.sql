@@ -1,0 +1,1 @@
+ALTER TABLE "evento" ALTER COLUMN "privacy_foto_necessaria" SET NOT NULL;

@@ -1,6 +1,8 @@
 import { t } from "elysia";
 
 export const iscriviBody = t.Object({
+	evento: t.String(),
+	token: t.String(),
 	nome_bimbo: t.String(),
 	cognome_bimbo: t.String(),
 	data_nascita_bimbo: t.Date(),
@@ -30,4 +32,14 @@ export const iscriviBody = t.Object({
 	privacy_foto: t.BooleanString(),
 	privacy_policy: t.BooleanString(),
 	note: t.String(),
+});
+
+export const iniziaIscrizioneBody = t.Object({
+	email: t.String(),
+	evento: t.String(),
+});
+
+export const loginBody = t.Object({
+	username_mail: t.String(),
+	password: t.String(),
 });

@@ -16,16 +16,15 @@ import { Route as rootRoute } from './routes/__root'
 
 // Create Virtual Routes
 
-const IscrizioneLazyImport = createFileRoute('/iscrizione')()
 const AdminLazyImport = createFileRoute('/admin')()
 const IndexLazyImport = createFileRoute('/')()
+const EventoEventoLazyImport = createFileRoute('/evento/$evento')()
+const AdminLoginLazyImport = createFileRoute('/admin/login')()
+const IscrizioneEventoTokenLazyImport = createFileRoute(
+  '/iscrizione/$evento/$token',
+)()
 
 // Create/Update Routes
-
-const IscrizioneLazyRoute = IscrizioneLazyImport.update({
-  path: '/iscrizione',
-  getParentRoute: () => rootRoute,
-} as any).lazy(() => import('./routes/iscrizione.lazy').then((d) => d.Route))
 
 const AdminLazyRoute = AdminLazyImport.update({
   path: '/admin',
@@ -36,6 +35,25 @@ const IndexLazyRoute = IndexLazyImport.update({
   path: '/',
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
+
+const EventoEventoLazyRoute = EventoEventoLazyImport.update({
+  path: '/evento/$evento',
+  getParentRoute: () => rootRoute,
+} as any).lazy(() =>
+  import('./routes/evento.$evento.lazy').then((d) => d.Route),
+)
+
+const AdminLoginLazyRoute = AdminLoginLazyImport.update({
+  path: '/login',
+  getParentRoute: () => AdminLazyRoute,
+} as any).lazy(() => import('./routes/admin.login.lazy').then((d) => d.Route))
+
+const IscrizioneEventoTokenLazyRoute = IscrizioneEventoTokenLazyImport.update({
+  path: '/iscrizione/$evento/$token',
+  getParentRoute: () => rootRoute,
+} as any).lazy(() =>
+  import('./routes/iscrizione.$evento.$token.lazy').then((d) => d.Route),
+)
 
 // Populate the FileRoutesByPath interface
 
@@ -55,11 +73,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLazyImport
       parentRoute: typeof rootRoute
     }
-    '/iscrizione': {
-      id: '/iscrizione'
-      path: '/iscrizione'
-      fullPath: '/iscrizione'
-      preLoaderRoute: typeof IscrizioneLazyImport
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginLazyImport
+      parentRoute: typeof AdminLazyImport
+    }
+    '/evento/$evento': {
+      id: '/evento/$evento'
+      path: '/evento/$evento'
+      fullPath: '/evento/$evento'
+      preLoaderRoute: typeof EventoEventoLazyImport
+      parentRoute: typeof rootRoute
+    }
+    '/iscrizione/$evento/$token': {
+      id: '/iscrizione/$evento/$token'
+      path: '/iscrizione/$evento/$token'
+      fullPath: '/iscrizione/$evento/$token'
+      preLoaderRoute: typeof IscrizioneEventoTokenLazyImport
       parentRoute: typeof rootRoute
     }
   }
@@ -69,8 +101,9 @@ declare module '@tanstack/react-router' {
 
 export const routeTree = rootRoute.addChildren({
   IndexLazyRoute,
-  AdminLazyRoute,
-  IscrizioneLazyRoute,
+  AdminLazyRoute: AdminLazyRoute.addChildren({ AdminLoginLazyRoute }),
+  EventoEventoLazyRoute,
+  IscrizioneEventoTokenLazyRoute,
 })
 
 /* prettier-ignore-end */
@@ -83,17 +116,28 @@ export const routeTree = rootRoute.addChildren({
       "children": [
         "/",
         "/admin",
-        "/iscrizione"
+        "/evento/$evento",
+        "/iscrizione/$evento/$token"
       ]
     },
     "/": {
       "filePath": "index.lazy.tsx"
     },
     "/admin": {
-      "filePath": "admin.lazy.tsx"
+      "filePath": "admin.lazy.tsx",
+      "children": [
+        "/admin/login"
+      ]
     },
-    "/iscrizione": {
-      "filePath": "iscrizione.lazy.tsx"
+    "/admin/login": {
+      "filePath": "admin.login.lazy.tsx",
+      "parent": "/admin"
+    },
+    "/evento/$evento": {
+      "filePath": "evento.$evento.lazy.tsx"
+    },
+    "/iscrizione/$evento/$token": {
+      "filePath": "iscrizione.$evento.$token.lazy.tsx"
     }
   }
 }

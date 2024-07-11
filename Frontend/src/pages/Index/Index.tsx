@@ -1,81 +1,85 @@
-import { Button } from "@/components/ui/button";
 import {
 	Card,
+	CardHeader,
 	CardContent,
 	CardDescription,
 	CardFooter,
-	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { useNavigate } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { useStore } from "@/context/store";
+import { useEffect, useMemo, useState } from "react";
+import { format } from "date-fns";
+
 function Index() {
-	const formSchema = z.object({
-		email: z.string().email({
-			message: "Inserisci una mail valida!",
-		}),
-	});
-	const form = useForm({
-		resolver: zodResolver(formSchema),
-		defaultValues: {
-			email: "",
+	const navigate = useNavigate();
+	const [api] = useStore((state) => [state.api]);
+	const [eventi, setEventi] = useState<(typeof api.evento)[]>([]);
+
+	const getEventi = useMemo(
+		() => async () => {
+			if (!api) {
+				return;
+			}
+			const { error, data } = await api.eventi.get();
+			if (error) {
+				console.error(error);
+				return;
+			}
+			setEventi(data);
 		},
-	});
+		[api],
+	);
 
-	function onSubmit(values: z.infer<typeof formSchema>) {
-		console.log(values);
-	}
+	useEffect(() => {
+		if (!api) {
+			return;
+		}
 
+		getEventi();
+	}, [api, getEventi]);
 	return (
-		<div className="flex justify-center items-center h-full">
-			<Card>
-				<CardHeader>
-					<CardTitle>
-						<div>Inserisci la mail di un genitore</div>
-					</CardTitle>
-					<CardDescription>
-						Assicurati sia una mail di cui hai l'accesso sotto mano!
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<Form {...form}>
-						<form onSubmit={form.handleSubmit(onSubmit)}>
-							<FormField
-								control={form.control}
-								name="email"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Email</FormLabel>
-										<FormControl>
-											<Input placeholder="Email" {...field} />
-										</FormControl>
-
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</form>
-					</Form>
-				</CardContent>
-				<CardFooter>
-					<Button
-						className="mx-auto font-bold text-xl "
-						onClick={form.handleSubmit(onSubmit)}
-					>
-						Inizia
-					</Button>
-				</CardFooter>
-			</Card>
+		<div className="my-2 ">
+			<h1 className="text-center font-bold text-3xl mb-2">
+				Eventi disponibili
+			</h1>
+			<div className="flex flex-col gap-2 items-center">
+				{eventi.map((evento: typeof api.evento) => (
+					<Card key={evento.id}>
+						<CardHeader>
+							<CardTitle>{evento.nome}</CardTitle>
+							<CardDescription>{evento.descrizione}</CardDescription>
+						</CardHeader>
+						<CardContent>
+							L'evento si svolgerà: dal{" "}
+							{format(new Date(evento.data_inizio), "dd/MM/yyyy")} al{" "}
+							{format(new Date(evento.data_fine), "dd/MM/yyyy")}
+							<br />
+							Luogo: {evento.luogo}
+							<br />
+							Organizzato da:{" "}
+							{evento.organizzatori.map((o) => o.nome).join(", ")}
+						</CardContent>
+						<CardFooter>
+							<Button
+								onClick={(e) => {
+									e.preventDefault();
+									navigate({
+										to: "/evento/$evento",
+										params: {
+											evento: evento.sottodominio,
+										},
+									});
+								}}
+								className="mx-auto font-bold text-3xl p-6"
+							>
+								Iscriviti!
+							</Button>
+						</CardFooter>
+					</Card>
+				))}
+			</div>
 		</div>
 	);
 }

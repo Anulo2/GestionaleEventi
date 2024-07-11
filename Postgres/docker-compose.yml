@@ -10,6 +10,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+
   pgadmin:
     image: elestio/pgadmin:latest
     environment:
@@ -21,7 +22,11 @@ services:
     volumes:
       - ./data/pgadmin/servers.json:/pgadmin4/servers.json:ro
 
+
 volumes:
   postgres_data:
     name: postgres_data
     driver: local
+
+
+ 

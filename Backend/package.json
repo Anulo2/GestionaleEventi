@@ -4,20 +4,24 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"dev": "bun run --watch src/index.ts",
-		"studio": "pnpm drizzle-kit studio",
-		"generate": "pnpm drizzle-kit generate"
+		"studio": "bunx drizzle-kit studio",
+		"generate": "bunx drizzle-kit generate",
+		"migrate": "bunx drizzle-kit migrate"
 	},
 	"dependencies": {
-		"@elysiajs/cors": "^1.0.2",
+		"@elysiajs/cors": "1.0.2",
 		"@elysiajs/eden": "^1.0.14",
 		"@elysiajs/swagger": "^1.0.5",
+		"@types/nodemailer": "^6.4.15",
 		"drizzle-kit": "^0.22.8",
-		"drizzle-orm": "^0.31.2",
-		"elysia": "latest",
+		"drizzle-orm": "^0.31.4",
+		"elysia": "1.0.25",
+		"nanoid": "^5.0.7",
+		"nodemailer": "^6.9.14",
 		"postgres": "^3.4.4"
 	},
 	"devDependencies": {
-		"bun-types": "latest"
+		"bun-types": "1.1.17"
 	},
 	"main": "./src/index.ts",
 	"peerDependencies": {

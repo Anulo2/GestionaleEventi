@@ -42,6 +42,7 @@ import { ChevronDown, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/mode-toggle";
 import DetailsCard from "@/components/details-card";
+import { useToast } from "@/components/ui/use-toast";
 /*
 export const iscrizioni: Iscrizione[] = [
 	{
@@ -358,6 +359,34 @@ function AdminIndex() {
 	]);
 
 	const [dettagliOpen, setDettagliOpen] = useState(false);
+	const [eventi, setEventi] = useState<(typeof api.evento)[]>([]);
+	const [eventoSelezionato, setEventoSelezionato] = useState<number | null>(
+		null,
+	);
+	const { toast } = useToast();
+
+	const getEventi = useMemo(
+		() => async () => {
+			if (!api) {
+				return;
+			}
+			const { error, data } = await api.eventi.get();
+			if (error) {
+				console.error(error);
+				return;
+			}
+			setEventi(data);
+		},
+		[api],
+	);
+
+	useEffect(() => {
+		if (!api) {
+			return;
+		}
+
+		getEventi();
+	}, [api, getEventi]);
 
 	const columns: ColumnDef<Iscrizione>[] = [
 		{
@@ -398,6 +427,25 @@ function AdminIndex() {
 			},
 			cell: ({ row }) => (
 				<div className="lowercase">{row.getValue("mail riferimento")}</div>
+			),
+		},
+		// bimbo.codice_fiscale
+		{
+			accessorKey: "codice fiscale",
+			accessorFn: (row) => row.bimbo.codice_fiscale,
+			header: ({ column }) => {
+				return (
+					<Button
+						variant="ghost"
+						onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+					>
+						Codice Fiscale
+						<ArrowUpDownIcon className="ml-2 h-4 w-4" />
+					</Button>
+				);
+			},
+			cell: ({ row }) => (
+				<div className="">{row.getValue("codice fiscale")}</div>
 			),
 		},
 		// bimbo.nome
@@ -500,13 +548,13 @@ function AdminIndex() {
 		},
 		// view bonifico
 		{
-			accessorKey: "bonifico",
+			accessorKey: "Bonifico",
 			accessorFn: (row) => row.pagamento_file,
 
 			cell: ({ row }) => (
 				<div className="w-full flex justify-center">
 					<Button
-						className={cn(!row.getValue("bonifico") && "hidden")}
+						className={cn(!row.getValue("Bonifico") && "hidden")}
 						variant="outline"
 						size="sm"
 						onClick={() => {
@@ -523,7 +571,7 @@ function AdminIndex() {
 		},
 		// Carta identità
 		{
-			accessorKey: "carta identita",
+			accessorKey: "Carta identita",
 			accessorFn: (row) => row.datiMedici.documento_identita,
 			cell: ({ row }) => (
 				<div className="w-full flex justify-center">
@@ -612,33 +660,73 @@ function AdminIndex() {
 			if (!api) {
 				return;
 			}
-			const { data } = await api.iscritti.get();
-			setIscrizioni(data || []);
+			const { data, error } = await api
+				.iscritti({
+					sottodominio: eventi.find((e) => e.id === eventoSelezionato)
+						?.sottodominio,
+				})
+				.get();
+
+			if (error) {
+				toast({
+					title: "Errore",
+					description: "Evento non trovato",
+					variant: "destructive",
+				});
+			} else {
+				setIscrizioni(data);
+			}
 		},
-		[api, setIscrizioni],
+		[api, setIscrizioni, eventoSelezionato, toast],
 	);
 
 	useEffect(() => {
+		if (!api) {
+			return;
+		}
+		if (eventoSelezionato === null) {
+			return;
+		}
 		getData();
-	}, [getData]);
+	}, [api, getData, eventoSelezionato]);
 
 	return (
 		<Dialog open={dettagliOpen}>
-			<div className="w-full 2xl:px-4">
+			<div className="w-full 2xl:px-4 h-full">
 				<ModeToggle className="absolute bottom-2 right-2" />
 				<DetailsCard />
+
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<Button
+							variant="outline"
+							className="h-auto flex gap-2 my-2 font-bold text-2xl"
+						>
+							<span className="">
+								{eventoSelezionato
+									? eventi.find((e) => e.id === eventoSelezionato)?.nome
+									: "Seleziona un evento"}
+							</span>
+							<ChevronDown className="h-auto" />
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end">
+						{eventi.map((evento) => (
+							<DropdownMenuItem
+								key={evento.id}
+								onClick={() => setEventoSelezionato(evento.id)}
+							>
+								{evento.nome}
+							</DropdownMenuItem>
+						))}
+					</DropdownMenuContent>
+				</DropdownMenu>
 				<div className="flex items-center py-4">
 					<Input
 						placeholder="Filter emails..."
-						value={
-							(table
-								.getColumn("mail riferimento")
-								?.getFilterValue() as string) ?? ""
-						}
+						value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
 						onChange={(event) =>
-							table
-								.getColumn("mail riferimento")
-								?.setFilterValue(event.target.value)
+							table.getColumn("email")?.setFilterValue(event.target.value)
 						}
 						className="max-w-sm"
 					/>

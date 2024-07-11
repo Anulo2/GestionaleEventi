@@ -8,6 +8,7 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
 
 	useEffect(() => {
 		const apiInstance = treaty<App>(import.meta.env.VITE_API_URL as string);
+
 		setApi(apiInstance);
 	}, [setApi]);
 

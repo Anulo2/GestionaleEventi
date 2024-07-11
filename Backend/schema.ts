@@ -14,6 +14,7 @@ import {
 	timestamp,
 	index,
 	uniqueIndex,
+	primaryKey,
 } from "drizzle-orm/pg-core";
 
 /*
@@ -46,7 +47,9 @@ export const evento = pgTable("evento", {
 	privacy_policy: text("privacy_policy"),
 	privacy_foto: text("privacy_foto"),
 	organizzatori: json("organizzatori"),
-	privacy_foto_necessaria: boolean("privacy_foto_necessaria").default(true),
+	privacy_foto_necessaria: boolean("privacy_foto_necessaria")
+		.default(true)
+		.notNull(),
 });
 
 export const bimbo = pgTable("bimbo", {
@@ -95,14 +98,23 @@ export const iscrizione = pgTable("iscrizione", {
 	is_completed: boolean("is_completed").default(false).notNull(),
 });
 
-export const emailVerification = pgTable("email_verification", {
-	token: serial("token").primaryKey(),
-	iscrizione_id: integer("iscrizione_id")
-		.references(() => iscrizione.id)
-		.notNull(),
-	expires_at: timestamp("expires_at").notNull(),
-	is_used: boolean("is_used").default(false).notNull(),
-});
+export const emailIscrizione = pgTable(
+	"email_iscrizione",
+	{
+		token: text("token"),
+		evento_id: integer("evento_id").references(() => evento.id),
+		mail: text("mail").notNull(),
+		expires_at: timestamp("expires_at")
+			.notNull()
+			.default(sql`now() + interval '1 day'`),
+		is_used: boolean("is_used").default(false).notNull(),
+	},
+	(table) => {
+		return {
+			pk: primaryKey({ columns: [table.token, table.evento_id] }),
+		};
+	},
+);
 
 export const iscrizioneGenitore = pgTable("iscrizione_genitore", {
 	id: serial("id").primaryKey(),
@@ -139,4 +151,15 @@ export const admin = pgTable("admin", {
 	username: text("username").unique().notNull(),
 	password: text("password").notNull(),
 	email: text("email").unique().notNull(),
+});
+
+export const adminToken = pgTable("admin_token", {
+	id: serial("id").primaryKey(),
+	admin_id: integer("admin_id")
+		.references(() => admin.id)
+		.notNull(),
+	token: text("token").notNull(),
+	expires_at: timestamp("expires_at")
+		.notNull()
+		.default(sql`now() + interval '1 day'`),
 });

@@ -37,7 +37,7 @@ import {
 	CardFooter,
 	CardTitle,
 } from "@/components/ui/card";
-
+import { useNavigate } from "@tanstack/react-router";
 const formSchema = z.object({
 	nome_bimbo: z.string().min(2, {
 		message: "Il nome deve essere lungo almeno 2 caratteri",
@@ -118,10 +118,15 @@ const formSchema = z.object({
 	}),
 	note: z.string().default(""),
 });
-
+import { useEffect, useMemo } from "react";
 type FormSchema = z.infer<typeof formSchema>;
 
+import { useParams } from "@tanstack/react-router";
+
 function Iscrizione() {
+	const { evento, token } = useParams({ from: "/iscrizione/$evento/$token" });
+	const navigate = useNavigate();
+
 	const { toast } = useToast();
 	const [
 		showPrivacyText,
@@ -136,6 +141,43 @@ function Iscrizione() {
 		state.iscrizioneCompleta,
 		state.setIscrizioneCompleta,
 	]);
+
+	const checkToken = useMemo(
+		() => async () => {
+			if (!api) {
+				return;
+			}
+			if (!evento || !token) {
+				toast({
+					title: "Errore",
+					description: "Errore nell'invio dei dati",
+					variant: "destructive",
+				});
+				navigate({ to: "/" });
+				return;
+			}
+			const { error } = await api.iscrivi({ evento: evento }).get({
+				query: { token: token },
+			});
+
+			if (error) {
+				toast({
+					title: "Errore",
+					description: error.value,
+					variant: "destructive",
+				});
+				navigate({ to: "/" });
+			}
+		},
+		[api, evento, token, navigate, toast],
+	);
+
+	useEffect(() => {
+		if (!api) {
+			return;
+		}
+		checkToken();
+	}, [api, checkToken]);
 
 	const form = useForm<FormSchema>({
 		resolver: zodResolver(formSchema),
@@ -191,7 +233,9 @@ function Iscrizione() {
 		}
 		console.log(JSON.stringify(values.genitori));
 
-		const { data, error } = await api.iscrivi.post({
+		const { error } = await api.iscrivi.post({
+			evento,
+			token,
 			nome_bimbo: values.nome_bimbo,
 			cognome_bimbo: values.cognome_bimbo,
 			data_nascita_bimbo: values.data_nascita_bimbo,
@@ -242,191 +286,193 @@ function Iscrizione() {
 	}
 
 	return (
-		<Drawer open={showPrivacyText} onOpenChange={setShowPrivacyText}>
-			<div className="p-2">
-				<DrawerContent className="h-4/5 w-full md:max-w-2xl xl:max-w-5xl mx-auto">
-					<DrawerHeader>
-						<DrawerTitle>Privacy sulle foto</DrawerTitle>
-						<DrawerDescription>
-							Leggi attentamente quste informazioni!
-						</DrawerDescription>
-					</DrawerHeader>
-					<ScrollArea className="pl-4">
-						<div className="">
-							{
-								// print 200 lines of "hello"
-								Array.from({ length: 200 }, (_, i) => (
-									// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-									<div key={i}>Hello</div>
-								))
-							}
-						</div>
-					</ScrollArea>
+		<div className="xl:max-w-5xl mx-auto">
+			<Drawer open={showPrivacyText} onOpenChange={setShowPrivacyText}>
+				<div className="p-2">
+					<DrawerContent className="h-4/5 w-full md:max-w-2xl xl:max-w-5xl mx-auto">
+						<DrawerHeader>
+							<DrawerTitle>Privacy sulle foto</DrawerTitle>
+							<DrawerDescription>
+								Leggi attentamente quste informazioni!
+							</DrawerDescription>
+						</DrawerHeader>
+						<ScrollArea className="pl-4">
+							<div className="">
+								{
+									// print 200 lines of "hello"
+									Array.from({ length: 200 }, (_, i) => (
+										// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+										<div key={i}>Hello</div>
+									))
+								}
+							</div>
+						</ScrollArea>
 
-					<DrawerFooter>
-						<Button
-							onClick={(e) => {
-								e.preventDefault();
-								setShowPrivacyText(false);
-							}}
-							variant="outline"
+						<DrawerFooter>
+							<Button
+								onClick={(e) => {
+									e.preventDefault();
+									setShowPrivacyText(false);
+								}}
+								variant="outline"
+							>
+								Chiud
+							</Button>
+						</DrawerFooter>
+					</DrawerContent>
+					<div className="font-extrabold text-2xl text-center w-full ">
+						Iscrizione al Grest 2024
+					</div>
+					<Form {...form}>
+						<form
+							onSubmit={form.handleSubmit(onSubmit)}
+							className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 "
 						>
-							Chiud
-						</Button>
-					</DrawerFooter>
-				</DrawerContent>
-				<div className="font-extrabold text-2xl text-center w-full ">
-					Iscrizione al Grest 2024
+							<TextInput
+								form={form}
+								field_name="nome_bimbo"
+								label="Nome"
+								placeholder="Nome"
+								description="Nome figlio/a"
+							/>
+							<TextInput
+								form={form}
+								field_name="cognome_bimbo"
+								label="Cognome"
+								placeholder="Cognome"
+								description="Cognome figlio/a"
+							/>
+							<DateInput
+								form={form}
+								field_name="data_nascita_bimbo"
+								label="Data di nascita"
+								description="Data di nascita figlio/a"
+							/>
+							<TextInput
+								form={form}
+								field_name="residenza_bimbo"
+								label="Residenza"
+								placeholder="Residenza"
+								description="Residenza figlio/a"
+							/>
+							<TextInput
+								form={form}
+								field_name="luogo_nascita_bimbo"
+								label="Luogo di nascita"
+								placeholder="Luogo di nascita"
+								description="Luogo di nascita figlio/a"
+							/>
+							<TextInput
+								form={form}
+								field_name="codice_fiscale_bimbo"
+								label="Codice fiscale"
+								placeholder="Codice fiscale"
+								description="Codice fiscale figlio/a"
+							/>
+							<BooleanInput
+								form={form}
+								field_name="iscritto_noi_bimbo"
+								label="Iscritto al NOI"
+								description="Il figlio/a è iscritto al NOI?"
+							/>
+							<FileUploadInput
+								form={form}
+								field_name="carta_identita_bimbo"
+								label="Carica la carta d'identità"
+								description="Carica la carta d'identità del figlio/a"
+								accept="image/*"
+							/>
+							<TextInput
+								form={form}
+								field_name="allergie_bimbo"
+								label="Allergie"
+								placeholder="Allergie"
+								description="Allergie figlio/a e farmaci che deve assumere per esse"
+								type="textarea"
+								className="col-span-1 md:col-span-2 "
+							/>
+							<TextInput
+								form={form}
+								field_name="patologie_bimbo"
+								label="Patologie"
+								placeholder="Patologie"
+								description="Patologie figlio/a e farmaci che deve assumere per esse"
+								type="textarea"
+								className="col-span-1 md:col-span-2 "
+							/>
+
+							<Separator className="col-span-1 md:col-span-2 xl:col-span-4" />
+							<ParentInputs
+								className="col-span-1 md:col-span-2 xl:col-span-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 "
+								form={form}
+							/>
+							<Separator className="col-span-1 md:col-span-2 xl:col-span-4" />
+							<ContattiInputs
+								className="col-span-1 md:col-span-2 xl:col-span-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 "
+								form={form}
+							/>
+							<Separator className="col-span-1 md:col-span-2  xl:col-span-4  " />
+							<FileUploadInput
+								form={form}
+								field_name="bonifico_pagamento"
+								label="Carica il bonifico"
+								description="Carica il bonifico di pagamento se hai già pagato"
+								accept="application/pdf"
+								className="col-span-1 xl:col-span-2   "
+							/>
+							<Separator className="col-span-1 md:col-span-2  xl:col-span-4  " />
+							<TextInput
+								form={form}
+								field_name="note"
+								label="Note"
+								placeholder="Note"
+								description="Eventuali note aggiuntive"
+								type="textarea"
+								className="col-span-1 md:col-span-2  xl:col-span-4  "
+							/>
+							<Separator className="col-span-1 md:col-span-2  xl:col-span-4  " />
+
+							<BooleanInput
+								form={form}
+								field_name="privacy_foto"
+								label="Accetta privacy foto"
+								description="Accetti la privacy delle foto?"
+							/>
+							<Button
+								onClick={(e) => {
+									e.preventDefault();
+									setShowPrivacyText(true);
+								}}
+								className="my-auto"
+							>
+								Leggila
+							</Button>
+							<BooleanInput
+								form={form}
+								field_name="privacy_policy"
+								label="Accetta privacy policy"
+								description="Accetti la privacy policy?"
+							/>
+							<Button
+								onClick={(e) => {
+									e.preventDefault();
+									setShowPrivacyText(true);
+								}}
+								className="my-auto"
+							>
+								Leggila
+							</Button>
+							<Button
+								className="col-span-1 md:col-span-2  xl:col-span-4 text-3xl font-bold mt-4 p-8 w-full"
+								type="submit"
+							>
+								Iscrivi
+							</Button>
+						</form>
+					</Form>
 				</div>
-				<Form {...form}>
-					<form
-						onSubmit={form.handleSubmit(onSubmit)}
-						className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 "
-					>
-						<TextInput
-							form={form}
-							field_name="nome_bimbo"
-							label="Nome"
-							placeholder="Nome"
-							description="Nome figlio/a"
-						/>
-						<TextInput
-							form={form}
-							field_name="cognome_bimbo"
-							label="Cognome"
-							placeholder="Cognome"
-							description="Cognome figlio/a"
-						/>
-						<DateInput
-							form={form}
-							field_name="data_nascita_bimbo"
-							label="Data di nascita"
-							description="Data di nascita figlio/a"
-						/>
-						<TextInput
-							form={form}
-							field_name="residenza_bimbo"
-							label="Residenza"
-							placeholder="Residenza"
-							description="Residenza figlio/a"
-						/>
-						<TextInput
-							form={form}
-							field_name="luogo_nascita_bimbo"
-							label="Luogo di nascita"
-							placeholder="Luogo di nascita"
-							description="Luogo di nascita figlio/a"
-						/>
-						<TextInput
-							form={form}
-							field_name="codice_fiscale_bimbo"
-							label="Codice fiscale"
-							placeholder="Codice fiscale"
-							description="Codice fiscale figlio/a"
-						/>
-						<BooleanInput
-							form={form}
-							field_name="iscritto_noi_bimbo"
-							label="Iscritto al NOI"
-							description="Il figlio/a è iscritto al NOI?"
-						/>
-						<FileUploadInput
-							form={form}
-							field_name="carta_identita_bimbo"
-							label="Carica la carta d'identità"
-							description="Carica la carta d'identità del figlio/a"
-							accept="image/*"
-						/>
-						<TextInput
-							form={form}
-							field_name="allergie_bimbo"
-							label="Allergie"
-							placeholder="Allergie"
-							description="Allergie figlio/a e farmaci che deve assumere per esse"
-							type="textarea"
-							className="col-span-1 md:col-span-2 "
-						/>
-						<TextInput
-							form={form}
-							field_name="patologie_bimbo"
-							label="Patologie"
-							placeholder="Patologie"
-							description="Patologie figlio/a e farmaci che deve assumere per esse"
-							type="textarea"
-							className="col-span-1 md:col-span-2 "
-						/>
-
-						<Separator className="col-span-1 md:col-span-2 xl:col-span-4" />
-						<ParentInputs
-							className="col-span-1 md:col-span-2 xl:col-span-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 "
-							form={form}
-						/>
-						<Separator className="col-span-1 md:col-span-2 xl:col-span-4" />
-						<ContattiInputs
-							className="col-span-1 md:col-span-2 xl:col-span-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 "
-							form={form}
-						/>
-						<Separator className="col-span-1 md:col-span-2  xl:col-span-4  " />
-						<FileUploadInput
-							form={form}
-							field_name="bonifico_pagamento"
-							label="Carica il bonifico"
-							description="Carica il bonifico di pagamento se hai già pagato"
-							accept="application/pdf"
-							className="col-span-1 xl:col-span-2   "
-						/>
-						<Separator className="col-span-1 md:col-span-2  xl:col-span-4  " />
-						<TextInput
-							form={form}
-							field_name="note"
-							label="Note"
-							placeholder="Note"
-							description="Eventuali note aggiuntive"
-							type="textarea"
-							className="col-span-1 md:col-span-2  xl:col-span-4  "
-						/>
-						<Separator className="col-span-1 md:col-span-2  xl:col-span-4  " />
-
-						<BooleanInput
-							form={form}
-							field_name="privacy_foto"
-							label="Accetta privacy foto"
-							description="Accetti la privacy delle foto?"
-						/>
-						<Button
-							onClick={(e) => {
-								e.preventDefault();
-								setShowPrivacyText(true);
-							}}
-							className="my-auto"
-						>
-							Leggila
-						</Button>
-						<BooleanInput
-							form={form}
-							field_name="privacy_policy"
-							label="Accetta privacy policy"
-							description="Accetti la privacy policy?"
-						/>
-						<Button
-							onClick={(e) => {
-								e.preventDefault();
-								setShowPrivacyText(true);
-							}}
-							className="my-auto"
-						>
-							Leggila
-						</Button>
-						<Button
-							className="col-span-1 md:col-span-2  xl:col-span-4 text-3xl font-bold mt-4 p-8 w-full"
-							type="submit"
-						>
-							Iscrivi
-						</Button>
-					</form>
-				</Form>
-			</div>
-		</Drawer>
+			</Drawer>
+		</div>
 	);
 }
 
@@ -493,6 +539,15 @@ function ContattiInputs({ className, form }: ContattiInputsProps) {
 					</Button>
 				</div>
 			))}
+			{
+				// add an error if less than 2 contacts}
+				fields.length < 2 && (
+					<p className="col-span-1 md:col-span-2 xl:col-span-4 text-red-500">
+						Devi specificare almeno due contatti
+					</p>
+				)
+			}
+
 			<Button
 				type="button"
 				className="mt-2 w-full col-span-1 md:col-span-2 xl:col-span-4"

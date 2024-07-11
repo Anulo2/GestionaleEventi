@@ -31,17 +31,18 @@ CREATE TABLE IF NOT EXISTS "dati_medici" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"iscrizione_id" integer NOT NULL,
 	"documento_identita" serial NOT NULL,
-	"gruppo_sanguineo" text NOT NULL,
 	"allergie" text NOT NULL,
 	"patologie" text NOT NULL,
 	CONSTRAINT "dati_medici_documento_identita_unique" UNIQUE("documento_identita")
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "email_verification" (
-	"token" serial PRIMARY KEY NOT NULL,
-	"iscrizione_id" integer NOT NULL,
-	"expires_at" timestamp NOT NULL,
-	"is_used" boolean DEFAULT false NOT NULL
+CREATE TABLE IF NOT EXISTS "email_iscrizione" (
+	"token" text,
+	"evento_id" integer,
+	"mail" text NOT NULL,
+	"expires_at" timestamp DEFAULT now() + interval '1 day' NOT NULL,
+	"is_used" boolean DEFAULT false NOT NULL,
+	CONSTRAINT "email_iscrizione_token_evento_id_pk" PRIMARY KEY("token","evento_id")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "evento" (
@@ -75,7 +76,9 @@ CREATE TABLE IF NOT EXISTS "iscrizione" (
 	"timestamp_iscrizione" timestamp DEFAULT now() NOT NULL,
 	"note" text,
 	"pagamento" boolean NOT NULL,
-	"is_completed" boolean DEFAULT false NOT NULL
+	"pagamento_file" serial NOT NULL,
+	"is_completed" boolean DEFAULT false NOT NULL,
+	CONSTRAINT "iscrizione_pagamento_file_unique" UNIQUE("pagamento_file")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "iscrizione_contatto" (
@@ -97,7 +100,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "email_verification" ADD CONSTRAINT "email_verification_iscrizione_id_iscrizione_id_fk" FOREIGN KEY ("iscrizione_id") REFERENCES "public"."iscrizione"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "email_iscrizione" ADD CONSTRAINT "email_iscrizione_evento_id_evento_id_fk" FOREIGN KEY ("evento_id") REFERENCES "public"."evento"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
