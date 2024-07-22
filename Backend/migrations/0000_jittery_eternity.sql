@@ -7,6 +7,13 @@ CREATE TABLE IF NOT EXISTS "admin" (
 	CONSTRAINT "admin_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "admin_token" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"admin_id" integer NOT NULL,
+	"token" text NOT NULL,
+	"expires_at" timestamp DEFAULT now() + interval '1 day' NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "bimbo" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"nome" text,
@@ -56,7 +63,7 @@ CREATE TABLE IF NOT EXISTS "evento" (
 	"privacy_policy" text,
 	"privacy_foto" text,
 	"organizzatori" json,
-	"privacy_foto_necessaria" boolean DEFAULT true,
+	"privacy_foto_necessaria" boolean DEFAULT true NOT NULL,
 	CONSTRAINT "evento_sottodominio_unique" UNIQUE("sottodominio")
 );
 --> statement-breakpoint
@@ -92,6 +99,12 @@ CREATE TABLE IF NOT EXISTS "iscrizione_genitore" (
 	"iscrizione_id" integer NOT NULL,
 	"genitore_id" integer NOT NULL
 );
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "admin_token" ADD CONSTRAINT "admin_token_admin_id_admin_id_fk" FOREIGN KEY ("admin_id") REFERENCES "public"."admin"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "dati_medici" ADD CONSTRAINT "dati_medici_iscrizione_id_iscrizione_id_fk" FOREIGN KEY ("iscrizione_id") REFERENCES "public"."iscrizione"("id") ON DELETE no action ON UPDATE no action;

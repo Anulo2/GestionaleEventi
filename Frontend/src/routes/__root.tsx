@@ -1,7 +1,6 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { ThemeProvider } from "@/context/theme-provider";
-import { ApiProvider } from "@/context/api-provider";
 import { Toaster } from "@/components/ui/toaster";
 
 export const Route = createRootRoute({
@@ -12,7 +11,7 @@ export const Route = createRootRoute({
 const rootComponent = () => (
 	<>
 		<ThemeProvider defaultTheme="dark" storageKey="ui-theme">
-			<ApiProvider>
+			
 				<Toaster />
 				<div className="w-screen flex min-h-screen justify-center">
 					<div className="w-full flex flex-col min-h-screen md:max-w-2xl xl:max-w-5xl 2xl:max-w-full">
@@ -32,7 +31,7 @@ const rootComponent = () => (
 						</div>
 					</div>
 				</div>
-			</ApiProvider>
+			
 		</ThemeProvider>
 		<TanStackRouterDevtools />
 	</>

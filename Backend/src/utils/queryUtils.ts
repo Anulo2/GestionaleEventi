@@ -410,7 +410,6 @@ interface LogInUserData {
 }
 
 export async function logInUser(db: PostgresJsDatabase, body: LogInUserData) {
-	const hashedPsw = await Bun.password.hash(body.password);
 	const user = await db
 		.select()
 		.from(admin)
@@ -420,11 +419,14 @@ export async function logInUser(db: PostgresJsDatabase, body: LogInUserData) {
 					eq(admin.username, body.username_mail),
 					eq(admin.email, body.username_mail),
 				),
-				eq(admin.password, hashedPsw),
 			),
 		);
 
 	if (user.length === 0) {
+		return null;
+	}
+
+	if (!(await Bun.password.verify(body.password, user[0].password))) {
 		return null;
 	}
 
@@ -436,4 +438,29 @@ export async function logInUser(db: PostgresJsDatabase, body: LogInUserData) {
 	});
 
 	return token;
+}
+
+interface LogInStatusData {
+	token: string;
+}
+
+export async function checkLogin(
+	db: PostgresJsDatabase,
+	body: LogInStatusData,
+) {
+	const token = await db
+		.select()
+		.from(adminToken)
+		.where(eq(adminToken.token, body.token));
+	if (token.length === 0) {
+		return null;
+	}
+	// generate a new token
+	const newToken = nanoid();
+	await db.insert(adminToken).values({
+		admin_id: token[0].admin_id,
+		token: newToken,
+	});
+
+	return newToken;
 }

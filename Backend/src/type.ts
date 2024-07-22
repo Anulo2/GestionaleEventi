@@ -43,3 +43,7 @@ export const loginBody = t.Object({
 	username_mail: t.String(),
 	password: t.String(),
 });
+
+export const loginStatus = t.Object({
+	token: t.String(),
+});

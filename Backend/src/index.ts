@@ -4,7 +4,12 @@ import { swagger } from "@elysiajs/swagger";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
-import { iniziaIscrizioneBody, iscriviBody, loginBody } from "./type";
+import {
+	iniziaIscrizioneBody,
+	iscriviBody,
+	loginBody,
+	loginStatus,
+} from "./type";
 import {
 	insertIscrizione,
 	getIscrizioni,
@@ -13,6 +18,7 @@ import {
 	getTokenFromIdAndEventId,
 	getAllEvents,
 	logInUser,
+	checkLogin,
 } from "./utils/queryUtils";
 import nodemailer from "nodemailer";
 
@@ -58,6 +64,19 @@ const app = new Elysia({})
 		},
 		{
 			body: loginBody,
+		},
+	)
+	.post(
+		"/login/status",
+		async ({ error, body, store: { db } }) => {
+			const loginStatus = await checkLogin(db, body);
+			if (!loginStatus) {
+				return error(401, "Non autorizzato");
+			}
+			return loginStatus;
+		},
+		{
+			body: loginStatus,
 		},
 	)
 	.get(

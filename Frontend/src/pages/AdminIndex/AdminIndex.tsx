@@ -43,6 +43,8 @@ import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/mode-toggle";
 import DetailsCard from "@/components/details-card";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "@tanstack/react-router";
+
 /*
 export const iscrizioni: Iscrizione[] = [
 	{
@@ -365,6 +367,51 @@ function AdminIndex() {
 	);
 	const { toast } = useToast();
 
+	const [token, setToken] = useState(() => {
+		return localStorage.getItem("adminToken") || "";
+	});
+
+	useEffect(() => {
+		localStorage.setItem("adminToken", token);
+	}, [token]);
+
+	const navigate = useNavigate();
+
+	const checkLoginStatus = useMemo(
+		() => async () => {
+			if (!api) {
+				return;
+			}
+			const { data, error } = await api.login.status.post({
+				token: token,
+			});
+
+			if (error) {
+				setToken("");
+				navigate({
+					to: "/admin/login",
+				});
+			}
+
+			if (data) {
+				setToken(data);
+			}
+		},
+		[api, navigate, token],
+	);
+
+	useEffect(() => {
+		if (!api) {
+			toast({
+				title: "Errore",
+				description: "Qualcosa è andato storto, riprova più tardi",
+				variant: "destructive",
+			});
+		}
+
+		checkLoginStatus();
+	}, [api, checkLoginStatus, toast]);
+
 	const getEventi = useMemo(
 		() => async () => {
 			if (!api) {
@@ -677,7 +724,7 @@ function AdminIndex() {
 				setIscrizioni(data);
 			}
 		},
-		[api, setIscrizioni, eventoSelezionato, toast],
+		[api, setIscrizioni, eventoSelezionato, toast, eventi],
 	);
 
 	useEffect(() => {

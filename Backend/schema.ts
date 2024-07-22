@@ -4,16 +4,9 @@ import {
 	serial,
 	text,
 	integer,
-	smallint,
-	smallserial,
-	varchar,
-	bigint,
-	bigserial,
 	json,
 	boolean,
 	timestamp,
-	index,
-	uniqueIndex,
 	primaryKey,
 } from "drizzle-orm/pg-core";
 

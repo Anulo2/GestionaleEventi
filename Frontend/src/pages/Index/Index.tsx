@@ -39,8 +39,9 @@ function Index() {
 
 		getEventi();
 	}, [api, getEventi]);
+
 	return (
-		<div className="my-2 ">
+		<div className="my-2 h-full">
 			<h1 className="text-center font-bold text-3xl mb-2">
 				Eventi disponibili
 			</h1>
@@ -59,7 +60,7 @@ function Index() {
 							Luogo: {evento.luogo}
 							<br />
 							Organizzato da:{" "}
-							{evento.organizzatori.map((o) => o.nome).join(", ")}
+							{evento.organizzatori?.map((o) => o.nome).join(", ")}
 						</CardContent>
 						<CardFooter>
 							<Button

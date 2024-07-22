@@ -1,12 +1,13 @@
 import { create } from "zustand";
-import type { treaty } from "@elysiajs/eden";
+import  { treaty } from "@elysiajs/eden";
 import type { App } from "iscrizioni-grest-backend";
 import { devtools } from "zustand/middleware";
 import type { Iscrizione } from "@/types";
 
+
 interface Store {
-	api: ReturnType<typeof treaty<App>> | null;
-	setApi: (api: ReturnType<typeof treaty<App>>) => void;
+	api: ReturnType<typeof treaty<App>> ;
+
 	showPrivacyText: boolean;
 	setShowPrivacyText: (showPrivacyText: boolean) => void;
 	iscrizioneCompleta: boolean;
@@ -17,8 +18,8 @@ interface Store {
 
 export const useStore = create<Store>()(
 	devtools((set) => ({
-		api: null,
-		setApi: (api) => set({ api }),
+		api: treaty<App>(import.meta.env.VITE_API_URL as string),
+
 		showPrivacyText: false,
 		setShowPrivacyText: (showPrivacyText) => set({ showPrivacyText }),
 		iscrizioneCompleta: false,

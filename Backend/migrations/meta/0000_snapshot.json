@@ -1,5 +1,5 @@
 {
-  "id": "b09318f6-2eb3-41aa-bb9c-3c598a51b760",
+  "id": "e0208135-912e-44c9-baaa-4c18349847b0",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -52,6 +52,55 @@
           ]
         }
       }
+    },
+    "public.admin_token": {
+      "name": "admin_token",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "admin_id": {
+          "name": "admin_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token": {
+          "name": "token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now() + interval '1 day'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "admin_token_admin_id_admin_id_fk": {
+          "name": "admin_token_admin_id_admin_id_fk",
+          "tableFrom": "admin_token",
+          "tableTo": "admin",
+          "columnsFrom": [
+            "admin_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
     },
     "public.bimbo": {
       "name": "bimbo",
@@ -352,7 +401,7 @@
           "name": "privacy_foto_necessaria",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": true
         }
       },
