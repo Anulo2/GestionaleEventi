@@ -1,5 +1,5 @@
 import { useStore } from "@/context/store";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 
 import {
 	type ColumnDef,
@@ -15,7 +15,6 @@ import {
 } from "@tanstack/react-table";
 import { Input } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
-
 import { Button } from "@/components/ui/button";
 import { ArrowUpDownIcon } from "lucide-react";
 import type { Iscrizione } from "@/types";
@@ -377,28 +376,28 @@ function AdminIndex() {
 
 	const navigate = useNavigate();
 
-	const checkLoginStatus = useMemo(
-		() => async () => {
-			if (!api) {
-				return;
-			}
-			const { data, error } = await api.login.status.post({
-				token: token,
+	const checkLoginStatus = useCallback(async () => {
+		if (!api) {
+			return;
+		}
+		const { data, error } = await api.login.status.post({
+			token: token,
+		});
+
+		if (error) {
+			setToken("");
+			navigate({
+				to: "/admin/login",
 			});
+		}
 
-			if (error) {
-				setToken("");
-				navigate({
-					to: "/admin/login",
-				});
-			}
+		if (data) {
+			console.log("updating token");
+			setToken(data);
+		}
+	}, [api, navigate, token]);
 
-			if (data) {
-				setToken(data);
-			}
-		},
-		[api, navigate, token],
-	);
+	const initialCheck = useRef(false);
 
 	useEffect(() => {
 		if (!api) {
@@ -407,9 +406,13 @@ function AdminIndex() {
 				description: "Qualcosa è andato storto, riprova più tardi",
 				variant: "destructive",
 			});
+			return;
 		}
 
-		checkLoginStatus();
+		if (!initialCheck.current) {
+			checkLoginStatus();
+			initialCheck.current = true;
+		}
 	}, [api, checkLoginStatus, toast]);
 
 	const getEventi = useMemo(
@@ -434,6 +437,8 @@ function AdminIndex() {
 
 		getEventi();
 	}, [api, getEventi]);
+
+	const [dettagliContent, setDettagliContent] = useState(null);
 
 	const columns: ColumnDef<Iscrizione>[] = [
 		{
@@ -666,6 +671,8 @@ function AdminIndex() {
 							<DropdownMenuItem
 								onClick={() => {
 									setDettagliOpen(true);
+									console.log(iscrizione);
+									setDettagliContent(iscrizione);
 								}}
 								className="hover:cursor-pointer"
 							>
@@ -738,10 +745,22 @@ function AdminIndex() {
 	}, [api, getData, eventoSelezionato]);
 
 	return (
-		<Dialog open={dettagliOpen}>
+		<Dialog
+			open={dettagliOpen}
+			onOpenChange={(open) => {
+				setDettagliOpen(open);
+			}}
+		>
 			<div className="w-full 2xl:px-4 h-full">
 				<ModeToggle className="absolute bottom-2 right-2" />
-				<DetailsCard />
+				{dettagliOpen && dettagliContent && (
+					<DetailsCard
+						setDettagliOpen={setDettagliOpen}
+						dettagliContent={dettagliContent}
+						setDettagliContent={setDettagliContent}
+						getData={getData}
+					/>
+				)}
 
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
@@ -771,9 +790,15 @@ function AdminIndex() {
 				<div className="flex items-center py-4">
 					<Input
 						placeholder="Filter emails..."
-						value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
+						value={
+							(table
+								.getColumn("mail riferimento")
+								?.getFilterValue() as string) ?? ""
+						}
 						onChange={(event) =>
-							table.getColumn("email")?.setFilterValue(event.target.value)
+							table
+								.getColumn("mail riferimento")
+								?.setFilterValue(event.target.value)
 						}
 						className="max-w-sm"
 					/>

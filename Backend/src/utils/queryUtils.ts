@@ -208,6 +208,170 @@ export async function insertIscrizione(
 	});
 }
 
+interface UpdateIscrizioneData {
+	id: number;
+	nome_bimbo: string;
+	cognome_bimbo: string;
+	data_nascita_bimbo: Date;
+	residenza_bimbo: string;
+	luogo_nascita_bimbo: string;
+	codice_fiscale_bimbo: string;
+	iscritto_noi_bimbo: boolean;
+	allergie_bimbo: string;
+	patologie_bimbo: string;
+	genitori: { nome_genitore: string; cognome_genitore: string }[];
+	contatti: {
+		nome_contatto: string;
+		cognome_contatto: string;
+		telefono_contatto: string;
+		ruolo_contatto: string;
+	}[];
+	carta_identita_bimbo: File | undefined;
+	bonifico_pagamento: File | undefined;
+	privacy_foto: boolean;
+	privacy_policy: boolean;
+	note: string;
+}
+
+export async function updateIscrizione(
+	db: PostgresJsDatabase,
+	body: UpdateIscrizioneData,
+) {
+	const iscrizioneFound = await db
+		.select()
+		.from(iscrizione)
+		.where(eq(iscrizione.id, body.id))
+		.then((res) => res[0]);
+
+	if (!iscrizioneFound) {
+		throw new Error("Iscrizione not found");
+	}
+
+	const bimboFound = await db
+		.select()
+		.from(bimbo)
+		.where(eq(bimbo.id, iscrizioneFound.bimbo_id))
+		.then((res) => res[0]);
+
+	if (!bimboFound) {
+		throw new Error("Bimbo not found");
+	}
+
+	const datiMediciFound = await db
+		.select()
+		.from(datiMedici)
+		.where(eq(datiMedici.iscrizione_id, iscrizioneFound.id))
+		.then((res) => res[0]);
+
+	if (!datiMediciFound) {
+		throw new Error("Dati medici not found");
+	}
+
+	// update bimbo
+	await db
+		.update(bimbo)
+		.set({
+			nome: body.nome_bimbo,
+			cognome: body.cognome_bimbo,
+			data_nascita: body.data_nascita_bimbo,
+			residenza: body.residenza_bimbo,
+			luogo_nascita: body.luogo_nascita_bimbo,
+			codice_fiscale: body.codice_fiscale_bimbo,
+			iscritto_noi: body.iscritto_noi_bimbo,
+		})
+		.where(eq(bimbo.id, bimboFound.id));
+
+	// update dati medici
+	await db
+		.update(datiMedici)
+		.set({
+			allergie: body.allergie_bimbo,
+			patologie: body.patologie_bimbo,
+		})
+		.where(eq(datiMedici.id, datiMediciFound.id));
+
+	// delete genitori
+	await db
+		.delete(iscrizioneGenitore)
+		.where(eq(iscrizioneGenitore.iscrizione_id, iscrizioneFound.id));
+
+	// insert genitori
+	for (const genitoreIn of body.genitori) {
+		const insertedGenitore = await db
+			.insert(genitore)
+			.values({
+				nome: genitoreIn.nome_genitore,
+				cognome: genitoreIn.cognome_genitore,
+			})
+			.returning()
+			.then((res) => res[0]);
+		if (!insertedGenitore) {
+			throw new Error("Error inserting genitore");
+		}
+		await db.insert(iscrizioneGenitore).values({
+			iscrizione_id: iscrizioneFound.id,
+			genitore_id: insertedGenitore.id,
+		});
+
+		console.log("Genitore inserted");
+	}
+
+	// delete contatti
+	await db
+		.delete(iscrizioneContatto)
+		.where(eq(iscrizioneContatto.iscrizione_id, iscrizioneFound.id));
+
+	// insert contatti
+	for (const contattoIn of body.contatti) {
+		const insertedContatto = await db
+			.insert(contatto)
+			.values({
+				nome: contattoIn.nome_contatto,
+				cognome: contattoIn.cognome_contatto,
+				telefono: contattoIn.telefono_contatto,
+				ruolo: contattoIn.ruolo_contatto,
+			})
+			.returning()
+			.then((res) => res[0]);
+		if (!insertedContatto) {
+			throw new Error("Error inserting contatto");
+		}
+		await db.insert(iscrizioneContatto).values({
+			iscrizione_id: iscrizioneFound.id,
+			contatto_id: insertedContatto.id,
+		});
+
+		console.log("Contatto inserted");
+	}
+
+	if (body.bonifico_pagamento) {
+		Bun.write(
+			`./data/bonifici/${iscrizioneFound.pagamento_file}.pdf`,
+			body.bonifico_pagamento,
+		);
+	}
+
+	if (body.carta_identita_bimbo) {
+		Bun.write(
+			`./data/carte_identita/${datiMediciFound.documento_identita}.jpg`,
+			body.carta_identita_bimbo,
+		);
+	}
+
+	// update iscrizione
+	await db
+		.update(iscrizione)
+		.set({
+			privacy_policy_accettata: body.privacy_policy,
+			privacy_foto_accettata: body.privacy_foto,
+			note: body.note,
+			pagamento: !!body.bonifico_pagamento,
+		})
+		.where(eq(iscrizione.id, iscrizioneFound.id));
+
+	return "Iscrizione aggiornata con successo";
+}
+
 export async function getIscrizioni(
 	db: PostgresJsDatabase,
 	eventoFound: EventoFound,

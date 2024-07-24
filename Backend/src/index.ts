@@ -8,6 +8,7 @@ import {
 	iniziaIscrizioneBody,
 	iscriviBody,
 	loginBody,
+	updateBody,
 	loginStatus,
 } from "./type";
 import {
@@ -19,6 +20,7 @@ import {
 	getAllEvents,
 	logInUser,
 	checkLogin,
+	updateIscrizione,
 } from "./utils/queryUtils";
 import nodemailer from "nodemailer";
 
@@ -108,7 +110,19 @@ const app = new Elysia({})
 	.get("/bonifico/:id", ({ params: { id } }) =>
 		Bun.file(`./data/bonifici/${id}.pdf`),
 	)
-
+	.post(
+		"/aggiorna",
+		async ({ body, error, store: { db } }) => {
+			try {
+				await updateIscrizione(db, body);
+			} catch (e) {
+				console.log(e);
+				return error(500, "Errore durante l'aggiornamento dell'iscrizione");
+			}
+			return "Iscrizione aggiornata con successo";
+		},
+		{ body: updateBody },
+	)
 	.post(
 		"/iscrivi",
 		async ({ body, error, store: { db, mailer } }) => {
