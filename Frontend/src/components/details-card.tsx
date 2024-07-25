@@ -69,6 +69,7 @@ function DetailsCard({
 			bonifico_pagamento: undefined,
 			privacy_foto: dettagliContent.privacy_foto_accettata,
 			privacy_policy: dettagliContent.privacy_policy_accettata,
+			note: dettagliContent.note,	
 		},
 	});
 	async function onSubmit(values: FormSchema) {
@@ -108,6 +109,7 @@ function DetailsCard({
 			privacy_foto: values.privacy_foto,
 			privacy_policy: values.privacy_policy,
 			note: values.note,
+			pagamento: dettagliContent.pagamento,
 		});
 		if (error) {
 			toast({

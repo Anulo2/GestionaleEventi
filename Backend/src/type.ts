@@ -35,6 +35,7 @@ export const iscriviBody = t.Object({
 });
 
 export const updateBody = t.Object({
+	token: t.String(),
 	id: t.Number(),
 	nome_bimbo: t.String(),
 	cognome_bimbo: t.String(),
@@ -64,6 +65,7 @@ export const updateBody = t.Object({
 	privacy_foto: t.BooleanString(),
 	privacy_policy: t.BooleanString(),
 	note: t.String(),
+	pagamento: t.BooleanString()
 });
 
 export const iniziaIscrizioneBody = t.Object({

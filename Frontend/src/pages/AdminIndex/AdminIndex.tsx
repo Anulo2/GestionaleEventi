@@ -549,7 +549,55 @@ function AdminIndex() {
 			},
 			cell: ({ row }) => (
 				<div className="w-full flex justify-center">
-					<Checkbox className="" checked={row.getValue("pagamento")} />
+					<Checkbox
+						onCheckedChange={async (value) => {
+							if (value === "indeterminate") {
+								return;
+							}
+							const { error } = await api.aggiorna.post({
+								id: row.original.id,
+								nome_bimbo: row.original.bimbo.nome,
+								cognome_bimbo: row.original.bimbo.cognome,
+								data_nascita_bimbo: new Date(row.original.bimbo.data_nascita),
+								residenza_bimbo: row.original.bimbo.residenza,
+								luogo_nascita_bimbo: row.original.bimbo.luogo_nascita,
+								codice_fiscale_bimbo: row.original.bimbo.codice_fiscale,
+								iscritto_noi_bimbo: row.original.bimbo.iscritto_noi,
+								allergie_bimbo: row.original.datiMedici.allergie,
+								patologie_bimbo: row.original.datiMedici.patologie,
+								genitori: row.original.genitori.map((genitore) => (JSON.stringify({
+				nome_genitore: genitore.nome,
+				cognome_genitore: genitore.cognome,
+			})))as string[],
+								contatti: row.original.contatti.map((contatto) => (JSON.stringify({
+				nome_contatto: contatto.nome,
+				cognome_contatto: contatto.cognome,
+				telefono_contatto: contatto.telefono,
+				ruolo_contatto: contatto.ruolo,
+			}))) as string[],
+								carta_identita_bimbo: undefined,
+								bonifico_pagamento: undefined,
+								privacy_foto: row.original.privacy_foto_accettata,
+								privacy_policy: row.original.privacy_policy_accettata,
+								note: row.original.note,
+								pagamento: value
+							});
+							if (error) {
+								toast({
+									title: "Errore",
+									description: error.value,
+									variant: "destructive",
+								});
+								return;
+							}
+							toast({
+								title: "Successo",
+								description: "Iscrizione aggiornata",
+							});
+							getData();
+						}}
+					
+					className="" checked={row.getValue("pagamento")} />
 				</div>
 			),
 		},
@@ -594,7 +642,55 @@ function AdminIndex() {
 			},
 			cell: ({ row }) => (
 				<div className="w-full flex justify-center">
-					<Checkbox checked={row.getValue("iscritto noi")} />
+					<Checkbox
+						onCheckedChange={async (value) => {
+							if (value === "indeterminate") {
+								return;
+							}
+							const { error } = await api.aggiorna.post({
+								id: row.original.id,
+								nome_bimbo: row.original.bimbo.nome,
+								cognome_bimbo: row.original.bimbo.cognome,
+								data_nascita_bimbo: new Date(row.original.bimbo.data_nascita),
+								residenza_bimbo: row.original.bimbo.residenza,
+								luogo_nascita_bimbo: row.original.bimbo.luogo_nascita,
+								codice_fiscale_bimbo: row.original.bimbo.codice_fiscale,
+								iscritto_noi_bimbo: value,
+								allergie_bimbo: row.original.datiMedici.allergie,
+								patologie_bimbo: row.original.datiMedici.patologie,
+								genitori: row.original.genitori.map((genitore) => (JSON.stringify({
+				nome_genitore: genitore.nome,
+				cognome_genitore: genitore.cognome,
+			})))as string[],
+								contatti: row.original.contatti.map((contatto) => (JSON.stringify({
+				nome_contatto: contatto.nome,
+				cognome_contatto: contatto.cognome,
+				telefono_contatto: contatto.telefono,
+				ruolo_contatto: contatto.ruolo,
+			}))) as string[],
+								carta_identita_bimbo: undefined,
+								bonifico_pagamento: undefined,
+								privacy_foto: row.original.privacy_foto_accettata,
+								privacy_policy: row.original.privacy_policy_accettata,
+								note: row.original.note,
+								pagamento: row.original.pagamento,
+							});
+							if (error) {
+								toast({
+									title: "Errore",
+									description: error.value,
+									variant: "destructive",
+								});
+								return;
+							}
+							toast({
+								title: "Successo",
+								description: "Iscrizione aggiornata",
+							});
+							getData();
+						}}
+						checked={row.getValue("iscritto noi")}
+					/>
 				</div>
 			),
 		},
@@ -612,7 +708,7 @@ function AdminIndex() {
 						onClick={() => {
 							if (!api) return;
 							window.open(
-								`//${import.meta.env.VITE_API_URL}/bonifico/${row.original.pagamento_file}`,
+								`//${import.meta.env.VITE_API_URL}/bonifico/${row.original.pagamento_file}/?token=${token}`,
 							);
 						}}
 					>
@@ -633,7 +729,7 @@ function AdminIndex() {
 						onClick={async () => {
 							if (!api) return;
 							window.open(
-								`//${import.meta.env.VITE_API_URL}/carta_identita/${row.original.datiMedici.documento_identita}`,
+								`//${import.meta.env.VITE_API_URL}/carta_identita/${row.original.datiMedici.documento_identita}/?token=${token}`,
 							);
 						}}
 					>
@@ -671,7 +767,7 @@ function AdminIndex() {
 							<DropdownMenuItem
 								onClick={() => {
 									setDettagliOpen(true);
-									console.log(iscrizione);
+									
 									setDettagliContent(iscrizione);
 								}}
 								className="hover:cursor-pointer"
@@ -717,9 +813,14 @@ function AdminIndex() {
 			const { data, error } = await api
 				.iscritti({
 					sottodominio: eventi.find((e) => e.id === eventoSelezionato)
-						?.sottodominio,
+						?.sottodominio
+						
 				})
-				.get();
+				.get({
+					query: {
+						token
+					}
+				});
 
 			if (error) {
 				toast({

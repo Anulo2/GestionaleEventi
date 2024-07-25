@@ -231,6 +231,7 @@ interface UpdateIscrizioneData {
 	privacy_foto: boolean;
 	privacy_policy: boolean;
 	note: string;
+	pagamento: boolean;
 }
 
 export async function updateIscrizione(
@@ -365,7 +366,7 @@ export async function updateIscrizione(
 			privacy_policy_accettata: body.privacy_policy,
 			privacy_foto_accettata: body.privacy_foto,
 			note: body.note,
-			pagamento: !!body.bonifico_pagamento,
+			pagamento: body.pagamento ? body.pagamento : !!body.bonifico_pagamento,
 		})
 		.where(eq(iscrizione.id, iscrizioneFound.id));
 
@@ -616,6 +617,7 @@ export async function checkLogin(
 		.select()
 		.from(adminToken)
 		.where(eq(adminToken.token, body.token));
+
 	if (token.length === 0) {
 		return null;
 	}

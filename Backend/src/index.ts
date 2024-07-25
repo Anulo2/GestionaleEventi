@@ -45,7 +45,7 @@ const transporter = nodemailer.createTransport({
 	secure: false, // Use `true` for port 465, `false` for all other ports
 	auth: {
 		user: "al97@ethereal.email",
-		pass: "nC2nb3XfYFWy1kcDgm",
+		pass: "",
 	},
 });
 
@@ -83,13 +83,23 @@ const app = new Elysia({})
 	)
 	.get(
 		"/iscritti/:sottodominio",
-		async ({ store: { db }, params: { sottodominio }, error }) => {
+		async ({ store: { db }, params: { sottodominio }, error, query }) => {
+			const token = await checkLogin(db, { token: query.token });
+			if (!token) {
+				return error(401, "Non autorizzato");
+			}
 			const eventoFound = await getEventoFromSottodominio(db, sottodominio);
 			if (!eventoFound) {
 				return error(404, "Evento non trovato");
 			}
 			return await getIscrizioni(db, eventoFound);
 		},
+		{
+			query: t.Object({
+				token: t.String(),
+			}),
+		},
+		
 	)
 	.get("/eventi", async ({ store: { db } }) => {
 		return await getAllEvents(db);
@@ -104,15 +114,44 @@ const app = new Elysia({})
 			return evento;
 		},
 	)
-	.get("/carta_identita/:id", ({ params: { id } }) =>
-		Bun.file(`./data/carte_identita/${id}.jpg`),
-	)
-	.get("/bonifico/:id", ({ params: { id } }) =>
-		Bun.file(`./data/bonifici/${id}.pdf`),
-	)
+	.get("/carta_identita/:id", async ({ params: { id } ,error,  query}) =>
+	{
+
+		
+		const token = await checkLogin(db, { token: query.token });
+
+
+		if (!token) {
+			return error(401, "Non autorizzato");
+		}
+
+		
+		return Bun.file(`./data/carte_identita/${id}.jpg`)
+	},{
+		query: t.Object({
+			token: t.String(),
+		})
+	})
+	.get("/bonifico/:id", async ({ params: { id } ,error,  query}) =>
+	{
+			const token = await checkLogin(db, { token: query.token });
+
+		if (!token) {
+			return error(401, "Non autorizzato");
+		}
+		return Bun.file(`./data/bonifici/${id}.pdf`)
+	},{
+		query: t.Object({
+			token: t.String(),
+		})
+	})
 	.post(
 		"/aggiorna",
 		async ({ body, error, store: { db } }) => {
+			const token = await checkLogin(db, { token: body.token });
+			if (!token) {
+				return error(401, "Non autorizzato");
+			}
 			try {
 				await updateIscrizione(db, body);
 			} catch (e) {
