@@ -44,6 +44,9 @@ import DetailsCard from "@/components/details-card";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "@tanstack/react-router";
 
+import Editor from "@/components/editor";
+import { Delta } from "quill/core";
+
 /*
 export const iscrizioni: Iscrizione[] = [
 	{
@@ -565,22 +568,26 @@ function AdminIndex() {
 								iscritto_noi_bimbo: row.original.bimbo.iscritto_noi,
 								allergie_bimbo: row.original.datiMedici.allergie,
 								patologie_bimbo: row.original.datiMedici.patologie,
-								genitori: row.original.genitori.map((genitore) => (JSON.stringify({
-				nome_genitore: genitore.nome,
-				cognome_genitore: genitore.cognome,
-			})))as string[],
-								contatti: row.original.contatti.map((contatto) => (JSON.stringify({
-				nome_contatto: contatto.nome,
-				cognome_contatto: contatto.cognome,
-				telefono_contatto: contatto.telefono,
-				ruolo_contatto: contatto.ruolo,
-			}))) as string[],
+								genitori: row.original.genitori.map((genitore) =>
+									JSON.stringify({
+										nome_genitore: genitore.nome,
+										cognome_genitore: genitore.cognome,
+									}),
+								) as string[],
+								contatti: row.original.contatti.map((contatto) =>
+									JSON.stringify({
+										nome_contatto: contatto.nome,
+										cognome_contatto: contatto.cognome,
+										telefono_contatto: contatto.telefono,
+										ruolo_contatto: contatto.ruolo,
+									}),
+								) as string[],
 								carta_identita_bimbo: undefined,
 								bonifico_pagamento: undefined,
 								privacy_foto: row.original.privacy_foto_accettata,
 								privacy_policy: row.original.privacy_policy_accettata,
 								note: row.original.note,
-								pagamento: value
+								pagamento: value,
 							});
 							if (error) {
 								toast({
@@ -596,8 +603,9 @@ function AdminIndex() {
 							});
 							getData();
 						}}
-					
-					className="" checked={row.getValue("pagamento")} />
+						className=""
+						checked={row.getValue("pagamento")}
+					/>
 				</div>
 			),
 		},
@@ -658,16 +666,20 @@ function AdminIndex() {
 								iscritto_noi_bimbo: value,
 								allergie_bimbo: row.original.datiMedici.allergie,
 								patologie_bimbo: row.original.datiMedici.patologie,
-								genitori: row.original.genitori.map((genitore) => (JSON.stringify({
-				nome_genitore: genitore.nome,
-				cognome_genitore: genitore.cognome,
-			})))as string[],
-								contatti: row.original.contatti.map((contatto) => (JSON.stringify({
-				nome_contatto: contatto.nome,
-				cognome_contatto: contatto.cognome,
-				telefono_contatto: contatto.telefono,
-				ruolo_contatto: contatto.ruolo,
-			}))) as string[],
+								genitori: row.original.genitori.map((genitore) =>
+									JSON.stringify({
+										nome_genitore: genitore.nome,
+										cognome_genitore: genitore.cognome,
+									}),
+								) as string[],
+								contatti: row.original.contatti.map((contatto) =>
+									JSON.stringify({
+										nome_contatto: contatto.nome,
+										cognome_contatto: contatto.cognome,
+										telefono_contatto: contatto.telefono,
+										ruolo_contatto: contatto.ruolo,
+									}),
+								) as string[],
 								carta_identita_bimbo: undefined,
 								bonifico_pagamento: undefined,
 								privacy_foto: row.original.privacy_foto_accettata,
@@ -767,7 +779,7 @@ function AdminIndex() {
 							<DropdownMenuItem
 								onClick={() => {
 									setDettagliOpen(true);
-									
+
 									setDettagliContent(iscrizione);
 								}}
 								className="hover:cursor-pointer"
@@ -813,13 +825,12 @@ function AdminIndex() {
 			const { data, error } = await api
 				.iscritti({
 					sottodominio: eventi.find((e) => e.id === eventoSelezionato)
-						?.sottodominio
-						
+						?.sottodominio,
 				})
 				.get({
 					query: {
-						token
-					}
+						token,
+					},
 				});
 
 			if (error) {
@@ -930,6 +941,115 @@ function AdminIndex() {
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>
+			
+				{ // show the editor only if an event is selected
+				eventoSelezionato !== null && (
+					<div className="flex flex-col">
+						<h1>Descrizione</h1>
+				<Editor
+					value={
+					eventi.find((e) => e.id === eventoSelezionato)?.descrizione ?
+									JSON.parse(eventi.find((e) => e.id === eventoSelezionato)?.descrizione) : new Delta()
+					}
+					onChange={(content, delta, source, editor) => {
+						console.log(editor.getContents());
+						const descrizione = JSON.stringify(editor.getContents());
+						const id = eventoSelezionato;
+						const sottodominio = eventi.find(
+							(e) => e.id === eventoSelezionato,
+						)?.sottodominio;
+						const evento = eventi.find((e) => e.id === eventoSelezionato);
+						console.log(evento)
+						api
+							.evento({
+								sottodominio,
+							})
+							.put({
+									token: token,
+									nome: evento.nome,
+									descrizione: descrizione,
+									data_inizio: evento.data_inizio,
+									data_fine: evento.data_fine,
+									luogo: evento.luogo,
+									privacy_policy: evento.privacy_policy,
+									privacy_foto: evento.privacy_foto,
+									organizzatori: evento.organizzatori,
+									privacy_foto_necessaria: evento.privacy_foto_necessaria,
+							});
+					}}
+					placeholder={"La descrizione dell'evento"}
+				/>
+				<h1>Privacy Policy</h1>
+				<Editor
+					value={
+					
+									eventi.find((e) => e.id === eventoSelezionato)?.privacy_policy ?
+									JSON.parse(eventi.find((e) => e.id === eventoSelezionato)?.privacy_policy) : new Delta()
+					}
+					onChange={(content, delta, source, editor) => {
+						console.log(editor.getContents());
+						const contenuto = JSON.stringify(editor.getContents());
+						const id = eventoSelezionato;
+						const sottodominio = eventi.find(
+							(e) => e.id === eventoSelezionato,
+						)?.sottodominio;
+						const evento = eventi.find((e) => e.id === eventoSelezionato);
+						console.log(evento)
+						api
+							.evento({
+								sottodominio,
+							})
+							.put({
+									token: token,
+									nome: evento.nome,
+									descrizione: evento.descrizione,
+									data_inizio: evento.data_inizio,
+									data_fine: evento.data_fine,
+									luogo: evento.luogo,
+									privacy_policy: contenuto,
+									privacy_foto: evento.privacy_foto,
+									organizzatori: evento.organizzatori,
+									privacy_foto_necessaria: evento.privacy_foto_necessaria,
+							});
+					}}
+					placeholder={"La privacy dell'evento"}
+				/>
+				<h1>Privacy Foto</h1>
+				<Editor
+					value={
+					
+									eventi.find((e) => e.id === eventoSelezionato)?.privacy_foto ?
+									JSON.parse(eventi.find((e) => e.id === eventoSelezionato)?.privacy_foto) : new Delta()
+					}
+					onChange={(content, delta, source, editor) => {
+						console.log(editor.getContents());
+						const contenuto = JSON.stringify(editor.getContents());
+						const id = eventoSelezionato;
+						const sottodominio = eventi.find(
+							(e) => e.id === eventoSelezionato,
+						)?.sottodominio;
+						const evento = eventi.find((e) => e.id === eventoSelezionato);
+						console.log(evento)
+						api
+							.evento({
+								sottodominio,
+							})
+							.put({
+									token: token,
+									nome: evento.nome,
+									descrizione: evento.descrizione,
+									data_inizio: evento.data_inizio,
+									data_fine: evento.data_fine,
+									luogo: evento.luogo,
+									privacy_policy: evento.privacy_policy,
+									privacy_foto: contenuto,
+									organizzatori: evento.organizzatori,
+									privacy_foto_necessaria: evento.privacy_foto_necessaria,
+							});
+					}}
+					placeholder={"La privacy delle foto"}
+				/></div>
+				)}
 				<div className="rounded-md border">
 					<Table>
 						<TableHeader>

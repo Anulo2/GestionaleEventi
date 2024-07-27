@@ -1,5 +1,5 @@
 {
-  "id": "e0208135-912e-44c9-baaa-4c18349847b0",
+  "id": "6696ae4a-7840-4b5e-badb-11d5bbb8b51d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -393,7 +393,7 @@
         },
         "organizzatori": {
           "name": "organizzatori",
-          "type": "json",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },

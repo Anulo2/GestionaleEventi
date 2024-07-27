@@ -81,3 +81,16 @@ export const loginBody = t.Object({
 export const loginStatus = t.Object({
 	token: t.String(),
 });
+
+export const updateEventoBody = t.Object({
+	token: t.String(),
+	nome: t.String(),
+	descrizione: t.String(),
+	data_inizio: t.Date(),
+	data_fine: t.Date(),
+	luogo: t.String(),
+	privacy_policy: t.String(),
+	privacy_foto: t.String(),
+	organizzatori: t.String(),
+	privacy_foto_necessaria: t.BooleanString(),
+})

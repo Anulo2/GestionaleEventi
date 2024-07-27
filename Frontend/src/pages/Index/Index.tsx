@@ -27,6 +27,7 @@ function Index() {
 				console.error(error);
 				return;
 			}
+			
 			setEventi(data);
 		},
 		[api],
@@ -50,7 +51,7 @@ function Index() {
 					<Card key={evento.id}>
 						<CardHeader>
 							<CardTitle>{evento.nome}</CardTitle>
-							<CardDescription>{evento.descrizione}</CardDescription>
+							{/*<CardDescription>{evento.descrizione}</CardDescription>*/}
 						</CardHeader>
 						<CardContent>
 							L'evento si svolgerà: dal{" "}
@@ -60,7 +61,7 @@ function Index() {
 							Luogo: {evento.luogo}
 							<br />
 							Organizzato da:{" "}
-							{evento.organizzatori?.map((o) => o.nome).join(", ")}
+							{JSON.parse(evento.organizzatori)?.map((o) => o.nome).join(", ")}
 						</CardContent>
 						<CardFooter>
 							<Button

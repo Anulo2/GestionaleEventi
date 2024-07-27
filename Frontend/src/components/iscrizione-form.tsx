@@ -28,6 +28,8 @@ interface IscrizioneFormProps {
 	form: UseFormReturn<FormSchema>;
 	onSubmit: (data: FormSchema) => void;
 	setShowPrivacyText?: (show: boolean) => void;
+	setPrivacyContent: (content: string) => void;
+	eventoInfo: unknown;
 	updating?: boolean;
 }
 
@@ -36,6 +38,8 @@ export function IscrizioneForm({
 	onSubmit,
 	setShowPrivacyText = () => {},
 	updating = false,
+	setPrivacyContent,
+	eventoInfo
 }: IscrizioneFormProps) {
 	return (
 		<Form {...form}>
@@ -156,6 +160,7 @@ export function IscrizioneForm({
 				<Button
 					onClick={(e) => {
 						e.preventDefault();
+						setPrivacyContent(eventoInfo?.privacy_foto);
 						setShowPrivacyText(true);
 					}}
 					className="my-auto"
@@ -171,6 +176,7 @@ export function IscrizioneForm({
 				<Button
 					onClick={(e) => {
 						e.preventDefault();
+						setPrivacyContent(eventoInfo?.privacy_policy);
 						setShowPrivacyText(true);
 					}}
 					className="my-auto"

@@ -22,7 +22,7 @@ function DetailsCard({
 	dettagliContent,
 	setDettagliOpen,
 	setDettagliContent,
-	getData,
+	getData
 }) {
 	const { toast } = useToast();
 	const [api] = useStore((state) => [state.api]);
@@ -137,7 +137,7 @@ function DetailsCard({
 				</DialogDescription>
 			</DialogHeader>
 
-			<IscrizioneForm form={form} onSubmit={onSubmit} updating={true} />
+			<IscrizioneForm form={form} onSubmit={onSubmit} updating={true} setPrivacyContent={()=>{}} eventoInfo={""} />
 		</DialogContent>
 	);
 }

@@ -39,7 +39,7 @@ export const evento = pgTable("evento", {
 	sottodominio: text("sottodominio").unique(),
 	privacy_policy: text("privacy_policy"),
 	privacy_foto: text("privacy_foto"),
-	organizzatori: json("organizzatori"),
+	organizzatori: text("organizzatori"),
 	privacy_foto_necessaria: boolean("privacy_foto_necessaria")
 		.default(true)
 		.notNull(),

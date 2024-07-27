@@ -38,6 +38,9 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { IscrizioneForm } from "@/components/iscrizione-form";
+import Editor from "@/components/editor";
+import { Delta } from "quill/core";
+import { useState } from "react";
 
 import { useNavigate } from "@tanstack/react-router";
 export const formSchema = z.object({
@@ -128,6 +131,7 @@ import { useParams } from "@tanstack/react-router";
 function Iscrizione() {
 	const { evento, token } = useParams({ from: "/iscrizione/$evento/$token" });
 	const navigate = useNavigate();
+	const [eventoInfo, setEventoInfo] = useState(null)
 
 	const { toast } = useToast();
 	const [
@@ -144,6 +148,8 @@ function Iscrizione() {
 		state.setIscrizioneCompleta,
 	]);
 
+	const [privacyContent, setPrivacyContent] = useState(null);
+
 	const checkToken = useMemo(
 		() => async () => {
 			if (!api) {
@@ -158,7 +164,7 @@ function Iscrizione() {
 				navigate({ to: "/" });
 				return;
 			}
-			const { error } = await api.iscrivi({ evento: evento }).get({
+			const { error, data } = await api.iscrivi({ evento: evento }).get({
 				query: { token: token },
 			});
 
@@ -170,6 +176,8 @@ function Iscrizione() {
 				});
 				navigate({ to: "/" });
 			}
+
+			setEventoInfo(data)
 		},
 		[api, evento, token, navigate, toast],
 	);
@@ -287,8 +295,13 @@ function Iscrizione() {
 		);
 	}
 
+	if (!eventoInfo) {
+		return( <>Loading...</>)
+	}
+
 	return (
 		<div className="xl:max-w-5xl mx-auto">
+			
 			<Drawer open={showPrivacyText} onOpenChange={setShowPrivacyText}>
 				<div className="p-2">
 					<DrawerContent className="h-4/5 w-full md:max-w-2xl xl:max-w-5xl mx-auto">
@@ -299,15 +312,15 @@ function Iscrizione() {
 							</DrawerDescription>
 						</DrawerHeader>
 						<ScrollArea className="pl-4">
-							<div className="">
-								{
-									// print 200 lines of "hello"
-									Array.from({ length: 200 }, (_, i) => (
-										// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-										<div key={i}>Hello</div>
-									))
+							<Editor
+								value={
+									// descrizione evento
+									JSON.parse(privacyContent) || new Delta()
 								}
-							</div>
+								onChange={() => {}}
+								placeholder={""}
+								readOnly={true}
+								/>
 						</ScrollArea>
 
 						<DrawerFooter>
@@ -318,17 +331,30 @@ function Iscrizione() {
 								}}
 								variant="outline"
 							>
-								Chiud
+								Chiudi
 							</Button>
 						</DrawerFooter>
 					</DrawerContent>
 					<div className="font-extrabold text-2xl text-center w-full ">
-						Iscrizione al Grest 2024
+						Iscrizione al {eventoInfo?.nome}
 					</div>
+					
+					<Editor 
+				value={
+					// descrizione evento
+					JSON.parse(eventoInfo?.descrizione) || new Delta()
+				}
+				onChange={()=> {}}
+				placeholder={""}
+				readOnly={true}
+			
+			/>
 					<IscrizioneForm
 						form={form}
 						onSubmit={onSubmit}
 						setShowPrivacyText={setShowPrivacyText}
+						setPrivacyContent={setPrivacyContent}
+						eventoInfo={eventoInfo}
 					/>
 				</div>
 			</Drawer>

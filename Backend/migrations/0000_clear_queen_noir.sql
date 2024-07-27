@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS "evento" (
 	"sottodominio" text,
 	"privacy_policy" text,
 	"privacy_foto" text,
-	"organizzatori" json,
+	"organizzatori" text,
 	"privacy_foto_necessaria" boolean DEFAULT true NOT NULL,
 	CONSTRAINT "evento_sottodominio_unique" UNIQUE("sottodominio")
 );

@@ -630,3 +630,46 @@ export async function checkLogin(
 
 	return newToken;
 }
+
+
+interface UpdateEventoData {
+	nome: string;
+	descrizione: string;
+	data_inizio: Date;
+	data_fine: Date;
+	luogo: string;
+	privacy_policy: string;
+	privacy_foto: string;
+	organizzatori: string;
+	privacy_foto_necessaria: boolean;
+}
+
+export async function updateEvento(
+	db: PostgresJsDatabase,
+	evento_id: number,
+	body: UpdateEventoData,
+) {
+
+
+	const updatedEvento = await db
+		.update(evento)
+		.set({
+			nome: body.nome,
+			descrizione: body.descrizione,
+			data_inizio: body.data_inizio,
+			data_fine: body.data_fine,
+			luogo: body.luogo,
+			privacy_policy: body.privacy_policy,
+			privacy_foto: body.privacy_foto,
+			organizzatori: body.organizzatori,
+			privacy_foto_necessaria: body.privacy_foto_necessaria,
+		})
+		.where(eq(evento.id, evento_id)).returning()
+	
+	if (!updatedEvento || updatedEvento.length === 0) {
+		return null;
+	}
+
+	return updatedEvento[0];
+
+}

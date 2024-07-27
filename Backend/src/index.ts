@@ -10,6 +10,7 @@ import {
 	loginBody,
 	updateBody,
 	loginStatus,
+	updateEventoBody,
 } from "./type";
 import {
 	insertIscrizione,
@@ -21,6 +22,7 @@ import {
 	logInUser,
 	checkLogin,
 	updateIscrizione,
+	updateEvento
 } from "./utils/queryUtils";
 import nodemailer from "nodemailer";
 
@@ -45,7 +47,7 @@ const transporter = nodemailer.createTransport({
 	secure: false, // Use `true` for port 465, `false` for all other ports
 	auth: {
 		user: "al97@ethereal.email",
-		pass: "",
+		pass: "nC2nb3XfYFWy1kcDgm",
 	},
 });
 
@@ -104,6 +106,25 @@ const app = new Elysia({})
 	.get("/eventi", async ({ store: { db } }) => {
 		return await getAllEvents(db);
 	})
+	.put("/evento/:sottodominio", async ({ params: { sottodominio }, store: { db },  body, error }) => {
+		const token = await checkLogin(db, { token: body.token });
+		if (!token) {
+			return error(401, "Non autorizzato");
+		}
+		const evento = await getEventoFromSottodominio(db, sottodominio);
+		if (!evento) {
+			return error(404, "Evento non trovato");
+		}
+
+		const result = await updateEvento(db, evento.id, body)
+
+		return result
+	},
+	{
+
+		body: updateEventoBody
+	}
+	)
 	.get(
 		"/evento/:sottodominio",
 		async ({ params: { sottodominio }, store: { db }, error }) => {
@@ -213,7 +234,7 @@ const app = new Elysia({})
 			if (tokenFound.is_used || tokenFound.expires_at < new Date()) {
 				return error(403, "Token scaduto o già utilizzato");
 			}
-			return "Token valido";
+			return eventoFound
 		},
 		{
 			query: t.Object({
